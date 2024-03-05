@@ -25,6 +25,11 @@ int Entity::getY()
     return entityDst.y;
 }
 
+SDL_Rect Entity::getRect()
+{
+    return entityDst;
+}
+
 void Entity::setX(int x)
 {
     entityDst.x = x;

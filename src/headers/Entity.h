@@ -11,6 +11,7 @@ public:
     void renderEntity(Render renderer);
     int getX();
     int getY();
+    SDL_Rect getRect();
     void setY(int y);
     void setX(int x);
 
