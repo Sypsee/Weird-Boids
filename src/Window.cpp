@@ -1,30 +1,27 @@
-#include "headers/Window.h"
+#include "Window.h"
+
+// std
 #include <iostream>
+#include <stdexcept>
 
-Window::Window(const char* name, int w, int h)
-    :window(NULL)
+Window::Window(const char* title, const uint16_t width, const uint16_t height)
 {
-    window = SDL_CreateWindow(
-        name,
-        SDL_WINDOWPOS_CENTERED,
-        SDL_WINDOWPOS_CENTERED,
-        w,
-        h,
-        SDL_RENDERER_ACCELERATED
-    );
-
-    if (window == NULL)
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS) != 0)
     {
-        std::cout << "Failed to create window, error : " << SDL_GetError() << std::endl;
+        std::cout << SDL_GetError() << "\n";
+        throw std::runtime_error("Failed to init SDL!\n");
+    }
+    m_Window = SDL_CreateWindow(title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, SDL_WINDOW_SHOWN);
+
+    if (m_Window == NULL)
+    {
+        std::cout << SDL_GetError() << "\n";
+        throw std::runtime_error("Failed to create SDL_Window!\n");
     }
 }
 
-SDL_Window* Window::get_Window()
+Window::~Window()
 {
-    return window;
-}
-
-void Window::cleanUp()
-{
-    SDL_DestroyWindow(window);
+    SDL_DestroyWindow(m_Window);
+    SDL_Quit();
 }

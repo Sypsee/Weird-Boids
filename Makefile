@@ -7,4 +7,4 @@ LIBS = -lmingw32 -lSDL2main -lSDL2 -lSDL2_image
 SRC = src/*.cpp imgui/*.cpp
 
 all:
-	g++ $(INCLUDE) $(LIB_DIR) -o $(GAME_NAME) $(SRC) $(LIBS) 
+	g++ $(SRC) $(INCLUDE) $(LIB_DIR) -o $(GAME_NAME) $(LIBS) -w
