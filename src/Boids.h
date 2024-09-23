@@ -3,17 +3,8 @@
 #include <SDL.h>
 #include <vector>
 
-#include "math.h"
-
-struct Boid
-{
-    uint16_t id;
-    Vec2 pos;
-    Vec2 moveDir;
-    uint8_t r;
-    uint8_t g;
-    uint8_t b;
-};
+#include "Boid.h"
+#include "Quadtree.h"
 
 class Boids
 {
@@ -31,7 +22,7 @@ public:
     float seprationFactor = 2.15f;
     float maxSpeed = 3.f;
     float maxNegihbourRadius = 10.f;
-    float maxViewAngle = -0.15f;
+    float maxViewAngle = 0.f;
     float mouseRepelForce = 2.f;
     float mouseRepelRadius = 50.f;
 
@@ -42,4 +33,6 @@ private:
     SDL_Rect bRect{
         0, 0, 5, 5
     };
+
+    QuadTreeContainer<Boid> m_BoidObjects;
 };

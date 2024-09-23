@@ -37,6 +37,12 @@ Renderer::~Renderer()
 
 void Renderer::Draw()
 {
+    currentFrame = SDL_GetTicks();
+    deltaTime = (double)(currentFrame - lastFrame);
+    lastFrame = SDL_GetTicks();
+
+    // std::cout << deltaTime << "\n";
+
     m_Boids.Update();
 
     ImGui_ImplSDLRenderer2_NewFrame();

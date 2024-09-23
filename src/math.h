@@ -88,3 +88,26 @@ struct Vec2
         return *this;
     }
 };
+
+struct Rect
+{
+    Vec2 pos;
+    Vec2 size;
+
+    Rect(const Vec2 &pos={0.f, 0.f}, const Vec2 &size={1.f, 1.f}) :pos(pos), size(size) {}
+
+    const bool contains(const Vec2 &p) const
+    {
+        return !(p.x < pos.x || p.y < pos.y || p.x >= (pos.x + size.x) || p.y >= (pos.y + size.y));
+    }
+
+    const bool contains(const Rect &r) const
+    {
+        return (r.pos.x >= pos.x) && (r.pos.x + r.size.x < pos.x + size.x) && (r.pos.y >= pos.y) && (r.pos.y + r.size.y < pos.y + size.y);
+    }
+
+    const bool overlaps(const Rect &r) const
+    {
+        return (pos.x < r.pos.x + r.size.x && pos.x + size.x >= r.pos.x && pos.y < r.pos.y + r.size.y && pos.y + size.y >= r.pos.y);
+    }
+};

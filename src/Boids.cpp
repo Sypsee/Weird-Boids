@@ -6,29 +6,7 @@
 Boids::Boids(int numberOfBoids)
     :numberOfBoids(numberOfBoids)
 {
-    m_Boids.reserve(numberOfBoids);
-    int y = 0;
-    int x = -numberOfBoids/2;
-    for (int i = 0; i < numberOfBoids; i++)
-    {
-        Boid boid{
-            i,  // ID
-            Vec2{x, y},   // Pos
-            Vec2(rand() % (1 - 0 + 1) + 0, rand() % (1 - 0 + 1) + 0),   // Move Dir
-            static_cast<uint8_t>(((rand() * 10) + 10) % 256), // r
-            static_cast<uint8_t>(((rand() * 10) + 10) % 256), // g
-            static_cast<uint8_t>(((rand() * 10) + 10) % 256)};// b
-
-        m_Boids.push_back(boid);
-
-        x += 5;
-
-        if (i % 10 == 0)
-        {
-            y+=5;
-            x = -numberOfBoids/2;
-        }
-    }
+    Reset(numberOfBoids);
 }
 
 Boids::~Boids()
@@ -41,25 +19,28 @@ void Boids::Reset(int numberOfBoids)
     m_Boids.clear();
 
     m_Boids.reserve(numberOfBoids);
+    m_BoidObjects.resize(Rect{{0.f, 0.f}, {800.f, 600.f}});
+
     int y = 0;
     int x = -numberOfBoids/2;
     for (int i = 0; i < numberOfBoids; i++)
     {
         Boid boid{
-            i,  // ID
-            Vec2{x, y},   // Pos
-            Vec2(rand() % (1 - 0 + 1) + 0, rand() % (1 - 0 + 1) + 0),   // Move Dir
-            static_cast<uint8_t>(((rand() * 10) + 10) % 256), // r
-            static_cast<uint8_t>(((rand() * 10) + 10) % 256), // g
-            static_cast<uint8_t>(((rand() * 10) + 10) % 256)};// b
+            (uint16_t)i,  // ID
+            Vec2{(float)x, (float)y},   // Pos
+            Vec2(rand() % (3 - (-3) + 1) + (-3), rand() % (3 - 0 + 1) + (-3)),   // Move Dir
+            static_cast<uint8_t>(((rand())) % 156 + 100), // r
+            static_cast<uint8_t>(((rand())) % 156 + 100), // g
+            static_cast<uint8_t>(((rand())) % 156 + 100)};// b
         
         m_Boids.push_back(boid);
+        m_BoidObjects.insert(boid, Rect{boid.pos, {bRect.w, bRect.h}});
 
-        x += 5;
+        x += 20;
 
-        if (i % 10 == 0)
+        if (i % 69 == 0)
         {
-            y+=5;
+            y+=20;
             x = -numberOfBoids/2;
         }
     }
@@ -67,8 +48,10 @@ void Boids::Reset(int numberOfBoids)
 
 void Boids::Update()
 {
-    for (Boid &boid : m_Boids)
+    for (auto boidIt = m_BoidObjects.begin(); boidIt != m_BoidObjects.end(); boidIt++)
     {
+        auto &boid = boidIt->item;
+
         // Update direction
         Vec2 force = {0.f, 0.f};
         Vec2 dir = {0.f,0.f};
@@ -76,19 +59,43 @@ void Boids::Update()
         Vec2 sumAdjacentMoveDir{0.f, 0.f};
         int adjacentBoidCount = 0;
 
-        for (Boid &adjacentBoid : m_Boids)
+        for (auto &adjacentBoid : m_BoidObjects.search(Rect{boid.pos, {20.f, 20.f}}))
         {
-            if (boid.id == adjacentBoid.id || (adjacentBoid.pos - boid.pos).magnitude() > maxNegihbourRadius
-                || boid.moveDir.dot(adjacentBoid.moveDir) < maxViewAngle) continue;
-
-            adjacentBoidCount++;
-            sumAdjacentPos += adjacentBoid.pos;
-            sumAdjacentMoveDir += adjacentBoid.moveDir;
-
-            Vec2 diff = (adjacentBoid.pos - boid.pos);
+            if (boid.id == adjacentBoid->item.id || (adjacentBoid->item.pos - boid.pos).magnitude() > maxNegihbourRadius) continue;
+            
+            Vec2 diff = (adjacentBoid->item.pos - boid.pos);
             const float dist = diff.magnitude();
             dir -= (diff / (dist * dist));
+
+            if (boid.velocity.dot(adjacentBoid->item.velocity) < maxViewAngle) continue;
+
+            adjacentBoidCount++;
+            sumAdjacentPos += adjacentBoid->item.pos;
+            sumAdjacentMoveDir += adjacentBoid->item.velocity;
+
+            adjacentBoid->item.r = boid.r;
+            adjacentBoid->item.g = boid.g;
+            adjacentBoid->item.b = boid.b;
         }
+
+        // for (Boid &adjacentBoid : m_Boids)
+        // {
+        //     if (boid.id == adjacentBoid.id || (adjacentBoid.pos - boid.pos).magnitude() > maxNegihbourRadius) continue;
+            
+        //     Vec2 diff = (adjacentBoid.pos - boid.pos);
+        //     const float dist = diff.magnitude();
+        //     dir -= (diff / (dist * dist));
+
+        //     if (boid.velocity.dot(adjacentBoid.velocity) < maxViewAngle) continue;
+
+        //     adjacentBoidCount++;
+        //     sumAdjacentPos += adjacentBoid.pos;
+        //     sumAdjacentMoveDir += adjacentBoid.velocity;
+
+        //     adjacentBoid.r = boid.r;
+        //     adjacentBoid.g = boid.g;
+        //     adjacentBoid.b = boid.b;
+        // }
 
         if (adjacentBoidCount > 0)
         {            
@@ -96,20 +103,21 @@ void Boids::Update()
             Vec2 avgMoveDir = sumAdjacentMoveDir / adjacentBoidCount;
 
             force += (avgPos - boid.pos) * cohesionFactor;           // cohesion
-            force += (avgMoveDir - boid.moveDir) * alignmentFactor;  // alignment
+            force += (avgMoveDir - boid.velocity) * alignmentFactor; // alignment
         }
 
         force += dir * seprationFactor;                              // sepration
 
-        // Update pos
-        boid.pos += boid.moveDir;
+        // Update pos & vel
+        boid.pos += boid.velocity;
+        boid.velocity += force;
 
-        boid.moveDir += force;
+        m_BoidObjects.relocate(boidIt, {boid.pos, {bRect.w, bRect.h}});
 
         // Limit Max Speed
-        if (boid.moveDir.magnitude() > maxSpeed)
+        if (boid.velocity.magnitude() > maxSpeed)
         {
-            boid.moveDir = boid.moveDir.normalized() * maxSpeed;
+            boid.velocity = boid.velocity.normalized() * maxSpeed;
         }
 
         int mouseX, mouseY;
@@ -117,7 +125,7 @@ void Boids::Update()
         mouseX -= 400;  // Convert to World Space
         mouseY -= 300;  // Convert to World Space
 
-        Vec2 mousePos = {mouseX, mouseY};
+        Vec2 mousePos = {(float)mouseX, (float)mouseY};
         Vec2 repulsion = (boid.pos - mousePos);
         if (repulsion.magnitude() < mouseRepelRadius && mousePos.x < 400 && mousePos.y < 250)
         {
@@ -128,7 +136,7 @@ void Boids::Update()
                 repulsion = repulsion / (repelDist);
                 repulsion = (repulsion) * mouseRepelForce;
 
-                boid.moveDir += repulsion;
+                boid.velocity += repulsion;
             }
         }
 

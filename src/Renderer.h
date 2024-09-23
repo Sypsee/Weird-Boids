@@ -15,6 +15,9 @@ public:
 private:
     SDL_Renderer *m_Renderer;
 
+    uint64_t currentFrame = 0, lastFrame = 0;
+    double deltaTime;
+
     // BOIDS
-    Boids m_Boids{200};
+    Boids m_Boids{800};
 };
